@@ -576,14 +576,50 @@ export default function App() {
   const [formStatus, setFormStatus] = useState<'idle' | 'submitting' | 'success' | 'error'>('idle');
 
   const fetchData = async () => {
-    const [postsRes, productsRes, settingsRes] = await Promise.all([
-      fetch('/api/posts'),
-      fetch('/api/products'),
-      fetch('/api/settings')
-    ]);
-    setPosts(await postsRes.json());
-    setProducts(await productsRes.json());
-    setSettings(await settingsRes.json());
+    try {
+      const [postsRes, productsRes, settingsRes] = await Promise.all([
+        fetch('/api/posts'),
+        fetch('/api/products'),
+        fetch('/api/settings')
+      ]);
+      
+      if (!postsRes.ok || !productsRes.ok || !settingsRes.ok) {
+        throw new Error('Failed to fetch data');
+      }
+
+      const [postsData, productsData, settingsData] = await Promise.all([
+        postsRes.json(),
+        productsRes.json(),
+        settingsRes.json()
+      ]);
+
+      setPosts(postsData);
+      setProducts(productsData);
+      setSettings(settingsData);
+    } catch (error) {
+      console.error('Error fetching data:', error);
+      // Fallback settings to avoid blank screen if API fails
+      setSettings({
+        site_name: 'SB Gartex',
+        primary_color: '#008080',
+        bg_color: '#001f3f',
+        font_family: 'Inter',
+        contact_email: 'andy@sbgartex.com',
+        logo_url: '',
+        about_title_ko: '품질과 신뢰의 파트너',
+        about_title_en: 'Your Partner in Quality & Trust',
+        about_content_ko: '',
+        about_content_en: '',
+        about_image_url: '',
+        partner_logos: '[]',
+        hero_bg_url: '',
+        hero_title_ko: '이런 마음으로 이렇게 귀하게',
+        hero_title_en: 'Setting the new standard',
+        hero_subtitle_ko: '',
+        hero_subtitle_en: '',
+        formspree_url: ''
+      } as SiteSettings);
+    }
   };
 
   useEffect(() => {
